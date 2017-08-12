@@ -100,11 +100,15 @@ func drawChart() {
 			continue
 		}
 
-		points := make([][3]float32, 2*len(metric.Points))
+		points := make([][3]float32, 2*(len(metric.Points)+1))
+		// points[0] = chartPoint(chart, chart.XMin, chart.YMin)
+		// points[1] = chartPoint(chart, chart.XMin, metric.Points[0].Y)
 		for i, point := range metric.Points {
-			points[2*i] = chartPoint(chart, point.X, chart.YMin)
+			points[2*i+0] = chartPoint(chart, point.X, chart.YMin)
 			points[2*i+1] = chartPoint(chart, point.X, point.Y)
 		}
+		points[2*len(metric.Points)+0] = chartPoint(chart, chart.XMax, chart.YMin)
+		points[2*len(metric.Points)+1] = chartPoint(chart, chart.XMax, metric.Points[len(metric.Points)-1].Y)
 
 		drawPrimitive(gl.TRIANGLE_STRIP, points, chartColor)
 	}

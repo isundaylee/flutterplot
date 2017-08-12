@@ -62,21 +62,23 @@ func AddDataPoint(value float64) {
 
 func GetChart() *Chart {
 	now := getCurrentTimestamp()
-	start := now - 10000
-	end := now
+	start := now - 10001
+	end := now - 1000
 
 	trim := -1
 	for trim+1 < len(points) && points[trim+1].X < start {
 		trim++
 	}
 
-	points = points[trim+1:]
+	if trim != -1 {
+		points = points[trim:]
+	}
 
 	return &Chart{
 		start,
 		end,
 		0,
-		10 * 128 * 102.4,
+		500,
 		[]Metric{
 			Metric{"tx_bytes", points},
 		},

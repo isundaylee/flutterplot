@@ -36,7 +36,7 @@ func Connect(addr *net.TCPAddr) {
 			}
 
 			for _, entry := range protoData.GetPoints() {
-				if entry.GetMetric() == "tx_bytes" {
+				if entry.GetMetric() == "rx_bytes" {
 					data.AddDataPoint(entry.GetValue())
 				}
 			}
