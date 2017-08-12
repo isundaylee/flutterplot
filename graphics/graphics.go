@@ -18,6 +18,8 @@ const (
 )
 
 var backgroundColor = color.RGBA{20, 20, 20, 255}
+var axesColor = color.RGBA{52, 152, 219, 255}
+var chartColor = color.RGBA{52, 152, 219, 255}
 
 var log = logging.MustGetLogger("example")
 
@@ -51,7 +53,7 @@ func windowPoint(x float32, y float32) [3]float32 {
 func drawAxes() {
 	gl.LineWidth(10.0)
 
-	radius := float32(0.5)
+	radius := float32(1)
 
 	// Draw the X axis
 	drawPrimitive(gl.TRIANGLE_FAN, [][3]float32{
@@ -59,7 +61,7 @@ func drawAxes() {
 		windowPoint(chartPadding-radius, chartPadding+radius),
 		windowPoint(windowWidth-chartPadding+radius, chartPadding+radius),
 		windowPoint(windowWidth-chartPadding+radius, chartPadding-radius),
-	})
+	}, axesColor)
 
 	// Draw the Y axis
 	drawPrimitive(gl.TRIANGLE_FAN, [][3]float32{
@@ -67,7 +69,7 @@ func drawAxes() {
 		windowPoint(chartPadding+radius, chartPadding-radius),
 		windowPoint(chartPadding+radius, windowHeight-chartPadding+radius),
 		windowPoint(chartPadding-radius, windowHeight-chartPadding+radius),
-	})
+	}, axesColor)
 }
 
 func chartPoint(chart *data.Chart, x float32, y float32) [3]float32 {
@@ -91,7 +93,7 @@ func drawChart() {
 			points[2*i+1] = chartPoint(chart, point.X, point.Y)
 		}
 
-		drawPrimitive(gl.TRIANGLE_STRIP, points)
+		drawPrimitive(gl.TRIANGLE_STRIP, points, chartColor)
 	}
 }
 

@@ -2,6 +2,7 @@ package graphics
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
@@ -11,17 +12,25 @@ import (
 const (
 	vertexShaderSource = `
 		#version 410
+
 		in vec3 vp;
+        layout(location = 1) in vec3 color;
+        out vec3 fragmentColor;
+
 		void main() {
 			gl_Position = vec4(vp, 1.0);
+            fragmentColor = color;
 		}
 	` + "\x00"
 
 	fragmentShaderSource = `
 		#version 410
-		out vec4 frag_colour;
+
+        in vec3 fragmentColor;
+		out vec3 color;
+
 		void main() {
-			frag_colour = vec4(0.2, 0.6, 0.86, 1.0);
+			color = fragmentColor;
 		}
 	` + "\x00"
 )
@@ -98,7 +107,7 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 	return shader, nil
 }
 
-func drawPrimitive(mode uint32, points [][3]float32) {
+func drawPrimitive(mode uint32, points [][3]float32, color color.RGBA) {
 	var vbo uint32
 	gl.GenBuffers(1, &vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
@@ -110,6 +119,23 @@ func drawPrimitive(mode uint32, points [][3]float32) {
 	gl.EnableVertexAttribArray(0)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
+
+	colors := make([][3]float32, len(points))
+	for i := range points {
+		colors[i] = [3]float32{
+			float32(color.R) / 255.0,
+			float32(color.G) / 255.0,
+			float32(color.B) / 255.0,
+		}
+	}
+
+	var vbc uint32
+	gl.GenBuffers(1, &vbc)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbc)
+	gl.BufferData(gl.ARRAY_BUFFER, 4*3*len(points), gl.Ptr(colors), gl.STATIC_DRAW)
+	gl.EnableVertexAttribArray(1)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbc)
+	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 0, nil)
 
 	gl.DrawArrays(mode, 0, int32(len(points)))
 }
