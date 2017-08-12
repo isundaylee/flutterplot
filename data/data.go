@@ -2,11 +2,12 @@ package data
 
 import (
 	"math"
+	"time"
 )
 
 type DataPoint struct {
-	X float32
-	Y float32
+	X float64
+	Y float64
 }
 
 type Metric struct {
@@ -15,21 +16,21 @@ type Metric struct {
 }
 
 type Chart struct {
-	XMin    float32
-	XMax    float32
-	YMin    float32
-	YMax    float32
+	XMin    float64
+	XMax    float64
+	YMin    float64
+	YMax    float64
 	Metrics []Metric
 }
 
-func generateSinChart(xMin float32, xMax float32, n int) *Chart {
-	step := (xMax - xMin) / float32(n-1)
+func generateSinChart(xMin float64, xMax float64, n int) *Chart {
+	step := (xMax - xMin) / float64(n-1)
 
 	points := make([]DataPoint, n)
 
 	for i := 0; i < n; i++ {
-		x := xMin + float32(i)*step
-		points[i] = DataPoint{x, float32(math.Sin(float64(x)))}
+		x := xMin + float64(i)*step
+		points[i] = DataPoint{x, float64(math.Sin(float64(x)))}
 	}
 
 	return &Chart{
@@ -43,9 +44,41 @@ func generateSinChart(xMin float32, xMax float32, n int) *Chart {
 	}
 }
 
-var step = float32(0.0)
+var step = float64(0.0)
+
+var points = make([]DataPoint, 0)
+
+func getCurrentTimestamp() float64 {
+	return float64(time.Now().UnixNano() / int64(time.Millisecond))
+}
+
+func AddDataPoint(value float64) {
+	if len(points) == 0 {
+		points = append(points, DataPoint{getCurrentTimestamp(), value})
+	} else {
+		points = append(points, DataPoint{getCurrentTimestamp(), 0.8*value + 0.2*points[len(points)-1].Y})
+	}
+}
 
 func GetChart() *Chart {
-	step += 0.01
-	return generateSinChart(step, step+3.0, 100)
+	now := getCurrentTimestamp()
+	start := now - 10000
+	end := now
+
+	trim := -1
+	for trim+1 < len(points) && points[trim+1].X < start {
+		trim++
+	}
+
+	points = points[trim+1:]
+
+	return &Chart{
+		start,
+		end,
+		0,
+		10 * 128 * 102.4,
+		[]Metric{
+			Metric{"tx_bytes", points},
+		},
+	}
 }

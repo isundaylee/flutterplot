@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
-	logging "github.com/op/go-logging"
 )
 
 const (
@@ -20,8 +19,6 @@ const (
 var backgroundColor = color.RGBA{20, 20, 20, 255}
 var axesColor = color.RGBA{52, 152, 219, 255}
 var chartColor = color.RGBA{52, 152, 219, 255}
-
-var log = logging.MustGetLogger("example")
 
 var window *glfw.Window
 var program uint32
@@ -72,13 +69,25 @@ func drawAxes() {
 	}, axesColor)
 }
 
-func chartPoint(chart *data.Chart, x float32, y float32) [3]float32 {
-	xRatio := float32((windowWidth - 2*chartPadding) / windowWidth)
-	yRatio := float32((windowHeight - 2*chartPadding) / windowHeight)
+func bound(x float64, lower float64, upper float64) float64 {
+	if x < lower {
+		return lower
+	}
+
+	if x > upper {
+		return upper
+	}
+
+	return x
+}
+
+func chartPoint(chart *data.Chart, x float64, y float64) [3]float32 {
+	xRatio := float64((windowWidth - 2*chartPadding) / windowWidth)
+	yRatio := float64((windowHeight - 2*chartPadding) / windowHeight)
 
 	return [3]float32{
-		xRatio * (x - (chart.XMax+chart.XMin)/2) / ((chart.XMax - chart.XMin) / 2),
-		yRatio * (y - (chart.YMax+chart.YMin)/2) / ((chart.YMax - chart.YMin) / 2),
+		float32(xRatio * bound((x-(chart.XMax+chart.XMin)/2)/((chart.XMax-chart.XMin)/2), -1, 1)),
+		float32(yRatio * bound((y-(chart.YMax+chart.YMin)/2)/((chart.YMax-chart.YMin)/2), -1, 1)),
 		0.0,
 	}
 }
@@ -87,6 +96,10 @@ func drawChart() {
 	chart := data.GetChart()
 
 	for _, metric := range chart.Metrics {
+		if len(metric.Points) == 0 {
+			continue
+		}
+
 		points := make([][3]float32, 2*len(metric.Points))
 		for i, point := range metric.Points {
 			points[2*i] = chartPoint(chart, point.X, chart.YMin)

@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"strings"
 
+	"github.com/isundaylee/flutterplot/logger"
+
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -64,7 +66,7 @@ func initOpenGL() (uint32, error) {
 	}
 
 	version := gl.GoStr(gl.GetString(gl.VERSION))
-	log.Info("OpenGL version is " + version)
+	logger.Logger.Info("OpenGL version is " + version)
 
 	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
 	if err != nil {
