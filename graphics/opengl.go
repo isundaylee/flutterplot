@@ -36,7 +36,7 @@ const (
 		}
 	` + "\x00"
 
-	PrimitiveBufferPointCount = 1000
+	primitiveBufferPointCount = 1000
 )
 
 func initGlfw() (*glfw.Window, error) {
@@ -131,8 +131,8 @@ var vao uint32
 var primitives []Primitive
 
 func initBuffers() {
-	pointBuffer = make([][3]float32, PrimitiveBufferPointCount)
-	colorBuffer = make([][3]float32, PrimitiveBufferPointCount)
+	pointBuffer = make([][3]float32, primitiveBufferPointCount)
+	colorBuffer = make([][3]float32, primitiveBufferPointCount)
 
 	gl.GenBuffers(1, &vboPoint)
 	gl.GenBuffers(1, &vboColor)
@@ -181,7 +181,7 @@ func drawPrimitive(mode uint32, points [][3]float32, color color.RGBA) {
 		}
 
 		pointsUsed++
-		if pointsUsed >= PrimitiveBufferPointCount {
+		if pointsUsed >= primitiveBufferPointCount {
 			panic("OpenGL point buffer full.")
 		}
 	}
