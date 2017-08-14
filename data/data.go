@@ -62,7 +62,7 @@ func AddDataPoint(value float64) {
 
 func GetChart() *Chart {
 	now := getCurrentTimestamp()
-	start := now - 10001
+	start := now - 61000
 	end := now - 1000
 
 	trim := -1
