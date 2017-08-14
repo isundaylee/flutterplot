@@ -17,11 +17,11 @@ func main() {
 	}
 
 	// Connect to flutter server
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:4999")
+	addr, err := net.ResolveTCPAddr("tcp", "stun.ljh.me:4999")
 	if err != nil {
 		panic(err)
 	}
-	transport.Connect(addr)
+	transport.Start(addr)
 
 	// Main loop
 	for !graphics.ShouldExit() {
