@@ -78,7 +78,7 @@ func GetChart() *Chart {
 		start,
 		end,
 		0,
-		500,
+		10 * 1024 / 8,
 		[]Metric{
 			Metric{"tx_bytes", points},
 		},

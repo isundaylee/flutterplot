@@ -124,8 +124,12 @@ func Render() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UseProgram(program)
 
+	PreRender()
+
 	drawChart()
 	drawAxes()
+
+	PostRender()
 
 	glfw.PollEvents()
 	window.SwapBuffers()

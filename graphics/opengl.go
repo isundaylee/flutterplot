@@ -35,6 +35,8 @@ const (
 			color = fragmentColor;
 		}
 	` + "\x00"
+
+	PrimitiveBufferPointCount = 1000
 )
 
 func initGlfw() (*glfw.Window, error) {
@@ -83,6 +85,9 @@ func initOpenGL() (uint32, error) {
 	gl.AttachShader(prog, fragmentShader)
 	gl.Enable(gl.MULTISAMPLE)
 	gl.LinkProgram(prog)
+
+	initBuffers()
+
 	return prog, nil
 }
 
@@ -109,35 +114,79 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 	return shader, nil
 }
 
-func drawPrimitive(mode uint32, points [][3]float32, color color.RGBA) {
-	var vbo uint32
-	gl.GenBuffers(1, &vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, 4*3*len(points), gl.Ptr(points), gl.STATIC_DRAW)
+type Primitive struct {
+	mode  uint32
+	begin int32
+	end   int32
+}
 
-	var vao uint32
+var pointBuffer [][3]float32
+var colorBuffer [][3]float32
+var pointsUsed = int32(0)
+
+var vboPoint uint32
+var vboColor uint32
+var vao uint32
+
+var primitives []Primitive
+
+func initBuffers() {
+	pointBuffer = make([][3]float32, PrimitiveBufferPointCount)
+	colorBuffer = make([][3]float32, PrimitiveBufferPointCount)
+
+	gl.GenBuffers(1, &vboPoint)
+	gl.GenBuffers(1, &vboColor)
+
 	gl.GenVertexArrays(1, &vao)
 	gl.BindVertexArray(vao)
+
 	gl.EnableVertexAttribArray(0)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vboPoint)
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
 
-	colors := make([][3]float32, len(points))
+	gl.EnableVertexAttribArray(1)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vboColor)
+	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 0, nil)
+}
+
+func PreRender() {
+	pointsUsed = 0
+	primitives = make([]Primitive, 0)
+}
+
+func PostRender() {
+	gl.BindVertexArray(vao)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, vboPoint)
+	gl.BufferData(gl.ARRAY_BUFFER, 4*3*len(pointBuffer), gl.Ptr(pointBuffer), gl.STATIC_DRAW)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, vboColor)
+	gl.BufferData(gl.ARRAY_BUFFER, 4*3*len(colorBuffer), gl.Ptr(colorBuffer), gl.STATIC_DRAW)
+
+	for _, segment := range primitives {
+		gl.DrawArrays(segment.mode, segment.begin, segment.end-segment.begin)
+	}
+}
+
+func drawPrimitive(mode uint32, points [][3]float32, color color.RGBA) {
+	begin := pointsUsed
+
 	for i := range points {
-		colors[i] = [3]float32{
+		pointBuffer[pointsUsed] = points[i]
+
+		colorBuffer[pointsUsed] = [3]float32{
 			float32(color.R) / 255.0,
 			float32(color.G) / 255.0,
 			float32(color.B) / 255.0,
 		}
+
+		pointsUsed++
+		if pointsUsed >= PrimitiveBufferPointCount {
+			panic("OpenGL point buffer full.")
+		}
 	}
 
-	var vbc uint32
-	gl.GenBuffers(1, &vbc)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbc)
-	gl.BufferData(gl.ARRAY_BUFFER, 4*3*len(points), gl.Ptr(colors), gl.STATIC_DRAW)
-	gl.EnableVertexAttribArray(1)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbc)
-	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 0, nil)
+	end := pointsUsed
 
-	gl.DrawArrays(mode, 0, int32(len(points)))
+	primitives = append(primitives, Primitive{mode, begin, end})
 }
