@@ -74,11 +74,26 @@ func GetChart() *Chart {
 		points = points[trim:]
 	}
 
+	chartUpper := float64(1.0)
+
+	if len(points) > 0 {
+		largestValue := points[0].Y
+		for _, point := range points {
+			if point.Y > largestValue {
+				largestValue = point.Y
+			}
+		}
+
+		for chartUpper <= largestValue {
+			chartUpper *= 2
+		}
+	}
+
 	return &Chart{
 		start,
 		end,
 		0,
-		10 * 1024 / 8,
+		chartUpper,
 		[]Metric{
 			Metric{"tx_bytes", points},
 		},
